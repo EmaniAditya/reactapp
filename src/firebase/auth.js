@@ -1,6 +1,6 @@
 import { auth } from "./firebase";
 
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
 //export const doCreateUserWithEmailAndPassword = async (email, password) => {
 //    return createUserWithEmailAndPassword(auth, email, password);
@@ -9,6 +9,64 @@ import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 //export const doSignInWithEmailAndPassword = (email, password) => {
 //    return signInWithEmailAndPassword(auth, email, password);
 //};
+
+export const createTestAccount = async () => {
+  try {
+    // Create a test user for emulator testing
+    const email = "test@example.com";
+    const password = "password123";
+    
+    console.log("Creating test account in emulator:", email);
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    console.log("Test account created:", userCredential.user);
+    return userCredential.user;
+  } catch (error) {
+    if (error.code === 'auth/email-already-in-use') {
+      console.log("Test user already exists, try signing in");
+      return signInWithEmailAndPassword(auth, "test@example.com", "password123")
+        .then(result => result.user);
+    }
+    console.error("Error creating test account:", error);
+    throw error;
+  }
+};
+
+export const doSignInWithGoogleRedirect = async () => {
+    console.log('Starting Google sign-in with redirect...');
+    const provider = new GoogleAuthProvider();
+    
+    // Configure the provider
+    provider.setCustomParameters({
+        prompt: 'select_account'
+    });
+    
+    // Add scopes
+    provider.addScope('email');
+    provider.addScope('profile');
+    
+    try {
+        await signInWithRedirect(auth, provider);
+        console.log('Redirect initiated - user will leave page now');
+        // No return here as this will redirect the user away from the page
+    } catch (error) {
+        console.error("Google Sign-In Redirect Error:", error);
+        throw new Error(`Redirect sign-in failed: ${error.message}`);
+    }
+};
+
+export const getGoogleRedirectResult = async () => {
+    try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+            console.log('Redirect sign-in successful:', result.user);
+            return result.user;
+        }
+        return null;
+    } catch (error) {
+        console.error("Google Redirect Result Error:", error);
+        throw new Error(`Failed to get redirect result: ${error.message}`);
+    }
+};
 
 export const doSignInWithGoogle = async () => {
     console.log('Starting Google sign-in process...');

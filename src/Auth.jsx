@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react';
-import { auth } from '../firebase';
+import { auth } from './firebase/firebase';
 
 export default function AuthState({ children }) {
     const [user, setUser] = useState(null);
-    const [loding, setloading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChnaged((user) => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
             setUser(user);
-            setloading(false);
+            setLoading(false);
         });
         return () => unsubscribe();
+    }, []);
 
-    });
     if (loading) {
-        return <div>Loading....</div>
+        return <div>Loading...</div>
     }
     return children(user);
 }
