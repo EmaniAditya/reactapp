@@ -9,6 +9,7 @@
     <PackageJsonScriptsBuild Condition="$(PackageJsonScriptsBuild) == ''">vite build</PackageJsonScriptsBuild>
     <PackageJsonScriptsLint Condition="$(PackageJsonScriptsLint) == ''">eslint .</PackageJsonScriptsLint>
     <PackageJsonScriptsPreview Condition="$(PackageJsonScriptsPreview) == ''">vite preview</PackageJsonScriptsPreview>
+    <PackageJsonDependenciesFirebase Condition="$(PackageJsonDependenciesFirebase) == ''">^11.10.0</PackageJsonDependenciesFirebase>
     <PackageJsonDependenciesReact Condition="$(PackageJsonDependenciesReact) == ''">^19.1.0</PackageJsonDependenciesReact>
     <PackageJsonDependenciesReactDom Condition="$(PackageJsonDependenciesReactDom) == ''">^19.1.0</PackageJsonDependenciesReactDom>
     <PackageJsonDevdependenciesEslintJs Condition="$(PackageJsonDevdependenciesEslintJs) == ''">^9.30.1</PackageJsonDevdependenciesEslintJs>
