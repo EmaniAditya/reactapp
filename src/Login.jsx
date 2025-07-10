@@ -1,17 +1,56 @@
 // src/Login.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 //import { auth, provider } from "./firebase/firebase";
 //import { signInWithPopup } from "firebase/auth";
 import "./Auth.css";
-import { doSignInWithGoogle, doSignInWithGoogleRedirect } from './firebase/auth';
+import { doSignInWithGoogle, doSignInWithGoogleRedirect, getGoogleRedirectResult, createTestAccount } from './firebase/auth';
 //import { useAuth } from "../../../contexts/authContext";
 function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isSigningIn, setIsSigningIn] = useState(false)
+    const [isTestingEmulator, setIsTestingEmulator] = useState(false)
     //const [errorMessage, setErrorMessage] = useState("")\
     const navigate = useNavigate();
+    
+    // Check for redirect result when component mounts
+    useEffect(() => {
+        const checkRedirectResult = async () => {
+            try {
+                const user = await getGoogleRedirectResult();
+                if (user) {
+                    console.log("Redirect sign-in completed successfully", user);
+                    
+                    // Store user data in localStorage
+                    const userData = {
+                        email: user.email,
+                        name: user.displayName,
+                        uid: user.uid,
+                        photoURL: user.photoURL,
+                    };
+                    
+                    localStorage.setItem("loggedInUser", JSON.stringify(userData));
+                    
+                    // Add user to users array if not exists
+                    const users = JSON.parse(localStorage.getItem("users")) || [];
+                    const exists = users.some((u) => u.email === user.email);
+                    if (!exists) {
+                        users.push({ email: user.email, password: null, name: user.displayName });
+                        localStorage.setItem("users", JSON.stringify(users));
+                    }
+                    
+                    // Navigate to home page
+                    navigate("/home");
+                }
+            } catch (error) {
+                console.error("Error getting redirect result:", error);
+                alert("Failed to complete Google sign-in. Please try again.");
+            }
+        };
+        
+        checkRedirectResult();
+    }, [navigate]);
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -27,58 +66,6 @@ function Login() {
             alert("Invalid credentials");
         }
     };
-
-    //const handleGoogleLogin = async () => {
-    //    try {
-    //        const result = await signInWithPopup(auth, provider);
-    //        const user = {
-    //            email: result.user.email,
-    //            name: result.user.displayName,
-    //            uid: result.user.uid,
-    //            photoURL: result.user.photoURL,
-    //        };
-
-    //        localStorage.setItem("loggedInUser", JSON.stringify(user));
-
-    //        const users = JSON.parse(localStorage.getItem("users")) || [];
-    //        const exists = users.some((u) => u.email === user.email);
-    //        if (!exists) {
-    //            users.push({ email: user.email, password: null, name: user.name });
-    //            localStorage.setItem("users", JSON.stringify(users));
-    //        }
-
-    //        navigate("/home");
-    //    } catch (err) {
-    //        console.error("Google Sign-In Error:", err);
-    //        alert("Google sign-in failed. Please try again.\n" + err.message);
-    //    }
-    //};
-    //const handleGoogleLogin = async () => {
-    //    try {
-    //        const result = await signInWithPopup(auth, provider);
-    //        const user = result.user;
-
-    //        localStorage.setItem("loggedInUser", JSON.stringify({
-    //            email: user.email,
-    //            name: user.displayName,
-    //            uid: user.uid,
-    //            photoURL: user.photoURL
-    //        }));
-
-    //        navigate("/home");
-    //    } catch (err) {
-    //        console.error("Google Sign-In Error:", err);
-    //        alert("Google sign-in failed.\n\n" + err.message);
-    //    }
-    //};
-
-    //const onSubmit = async (e) => {
-    //    e.preventDefault()
-    //    if (!isSigningIn) {
-    //        setIsSigningIn(true)
-    //        await doSignInWithEmailAndPassword(email, password)
-    //    }
-    //}
 
     const onGoogleSignIn = async () => {
         if (!isSigningIn) {
@@ -141,6 +128,40 @@ function Login() {
         }
     };
 
+    const handleEmulatorTest = async () => {
+        if (!isTestingEmulator) {
+            setIsTestingEmulator(true);
+            try {
+                const user = await createTestAccount();
+                
+                // Store user data in localStorage
+                const userData = {
+                    email: user.email,
+                    name: user.displayName || "Test User",
+                    uid: user.uid,
+                    photoURL: user.photoURL || null,
+                };
+                
+                localStorage.setItem("loggedInUser", JSON.stringify(userData));
+
+                // Add user to users array if not exists
+                const users = JSON.parse(localStorage.getItem("users")) || [];
+                const exists = users.some((u) => u.email === user.email);
+                if (!exists) {
+                    users.push({ email: user.email, password: null, name: userData.name });
+                    localStorage.setItem("users", JSON.stringify(users));
+                }
+
+                // Navigate to home page
+                navigate("/home");
+            } catch (error) {
+                console.error("Emulator Test Failed:", error);
+                alert("Failed to test with emulator: " + error.message);
+            } finally {
+                setIsTestingEmulator(false);
+            }
+        }
+    };
 
     return (
         <div className="auth-page">
@@ -167,7 +188,7 @@ function Login() {
 
                 <button type="submit" className="auth-button">Login</button>
 
-                {/* Google Icon-Only Button (no functionality yet) */}
+                {/* Google Sign-in Button */}
                 <div className="google-button-wrapper">
                     <button
                         type="button"
@@ -182,6 +203,16 @@ function Login() {
                         />
                     </button>
                 </div>
+
+                {/* Emulator Test Button */}
+                <button
+                    type="button"
+                    className="auth-button emulator-test-button"
+                    onClick={handleEmulatorTest}
+                    disabled={isTestingEmulator}
+                >
+                    {isTestingEmulator ? "Testing..." : "Test with Emulator"}
+                </button>
 
                 <Link to="/register" className="link-button">Register</Link>
                 <button

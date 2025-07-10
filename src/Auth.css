@@ -429,3 +429,14 @@
     font-weight: bold;
     margin-top: 1rem;
 }
+
+/* Emulator test button styles */
+.emulator-test-button {
+    background: linear-gradient(45deg, #f5a623, #f27121) !important;
+    margin-top: 0.5rem;
+}
+
+.emulator-test-button:disabled {
+    background: #cccccc !important;
+    cursor: not-allowed;
+}
